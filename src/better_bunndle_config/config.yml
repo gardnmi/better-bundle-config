@@ -1,0 +1,67 @@
+variables:
+  cluster_id:
+    description: The ID of an existing cluster.
+    default: 1234-567890-abcde123
+  notebook_path:
+    description: The path to an existing notebook.
+    default: ./hello.py
+  source_catalog:
+    description: The source catalog to use.
+    default: ${bundle.target}_source_catalog
+  target_catalog:
+    description: The target catalog to use.
+  bool:
+    description: A boolean variable.
+  string:
+    description: A string variable.
+  int:
+    description: An integer variable.
+  float:
+    description: A float variable.
+
+  my_task:
+    description: Tasks grouped under a specific task in a workflow
+    type: complex
+    default:
+      bool: ${var.bool}
+      string: ${var.string}
+      float: ${var.float}
+      int: ${var.int}    
+      environment: ${bundle.target}
+      catalog:
+        source_catalog: ${var.source_catalog}
+        target_catalog: ${var.target_catalog}
+      my_loop:
+        - A
+        - B
+        - C
+      checkpoint_path: /Volumes/${var.my_task.catalog.target_catalog}/my_schema/my_volume/_checkpoint
+
+      
+targets:
+  dev:
+    variables:
+      cluster_id: 1234-567890-abcde124
+      target_catalog: dev_target_catalog
+      bool: true
+      string: "Hello, Development!"
+      int: 42
+      float: 3.14
+  
+  staging:
+    variables:
+      cluster_id: 1234-567890-abcde124
+      target_catalog: staging_target_catalog
+      bool: false
+      string: "Hello, Staging!"
+      int: 100
+      float: 2.71
+
+  prod:
+    variables:
+      cluster_id: 1234-567890-abcde124
+      target_catalog: prod_target_catalog
+      bool: true
+      string: "Hello, Production!"
+      int: 7
+      float: 1.618

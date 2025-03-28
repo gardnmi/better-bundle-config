@@ -1,0 +1,94 @@
+version: "3"
+
+tasks:
+  install-terminaltexteffects:
+    desc: "Install terminaltexteffects"
+    cmds:
+      - pip install terminaltexteffects
+    silent: true
+
+
+  update-upgrade-linux-packages:
+    desc: "Update and Upgrade Linux System Packages"
+    deps: [install-terminaltexteffects]
+    cmds:
+      - echo "Updating and Upgrading Linux System Packages" | tte wipe
+      - sudo apt-get update
+      - sudo apt-get upgrade -y
+    silent: true
+
+
+  install-fzf:
+    desc: "Install fzf"
+    cmds:
+      - |
+        if ! command -v fzf &> /dev/null; then
+          echo "fzf not found, installing..."
+          sudo apt-get update
+          sudo apt-get install -y fzf
+        fi
+    silent: true
+
+
+  install-databricks-cli:
+    desc: "Install Databricks CLI"
+    deps: [install-terminaltexteffects]
+    cmds:
+      - |
+        if ! command -v databricks &> /dev/null; then
+          echo "Databricks CLI not found, installing..." | tte wipe
+          sudo curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sudo sh
+        else
+          echo "Databricks CLI is already installed" | tte wipe
+        fi
+    silent: true
+
+
+  configure-databricks-auth:
+    desc: "Set up Databricks authentication"
+    cmds:
+      - task install-fzf
+      - task install-databricks-cli
+      - |
+        echo "Please paste the URL for Databricks host (e.g., https://dbc-yourhost):" | tte wipe
+        read -r DATABRICKS_HOST
+        if [ -z "$DATABRICKS_HOST" ]; then
+          echo "No URL provided. Exiting." | tte rain
+          exit 1
+        fi
+
+
+        echo "Configuring Databricks Authentication for $environment environment" | tte rain
+        databricks auth login \
+          --configure-cluster \
+          --host $DATABRICKS_HOST \
+          --profile DEFAULT
+        echo "Databricks authentication configuration completed for $environment environment." | tte --frame-rate=200 wipe
+    silent: true
+
+
+  install-python-dependencies:
+    desc: "Set up Local Development Environment"
+    deps: [install-terminaltexteffects]
+    cmds:
+      - echo "Installing Python Development Tools and Dependencies" | tte wipe
+      # - pip install --upgrade pip
+      # - pip install -e .[dev]
+      # - pip uninstall -y pyspark
+      # - echo "Installing Hatch" | tte wipe
+      # - pipx install hatch
+
+      - uv sync --all-extras
+      - uv pip uninstall pyspark
+      - uv venv --seed --allow-existing
+    silent: true
+
+
+  setup-env:
+    desc: "Set up Environment"
+    cmds:
+        - task update-upgrade-linux-packages
+        - task install-databricks-cli
+        - task configure-databricks-auth
+        - task install-python-dependencies
+    silent: true
