@@ -443,6 +443,8 @@ class BetterBundleConfig:
             - The method performs iterative replacement until no more changes can be made
         """
         pattern = re.compile(r"\$\{([^}]+)\}")
+        missing_tokens = set()
+        
         # Check for the simple case: the entire string is exactly a single token.
         tokens = pattern.findall(template_string)
         if len(tokens) == 1 and template_string.strip() == "${" + tokens[0] + "}":
@@ -450,70 +452,38 @@ class BetterBundleConfig:
             if token.startswith("var."):
                 keys = token[4:].split(".")
                 replacement = cls._get_value_by_path(context.get("variables", {}), keys)
-                if replacement is None:
-                    if raise_on_missing_token:
-                        raise KeyError(
-                            f"Variable reference '{token}' not found in configuration['variables']."
-                        )
-                    else:
-                        logger.warning(
-                            f"Variable reference '{token}' not found in configuration['variables']."
-                        )
-                else:
-                    return replacement  # Preserves original datatype
             else:
                 parts = token.split(".")
                 replacement = cls._get_value_by_path(context, parts)
-                if replacement is None:
-                    if raise_on_missing_token:
-                        raise KeyError(
-                            f"Variable reference '{token}' not found in configuration['variables']."
-                        )
-                    else:
-                        logger.warning(
-                            f"Variable reference '{token}' not found in configuration['variables']."
-                        )
-                else:
-                    return replacement
+            if replacement is None:
+                missing_tokens.add(token)
+            else:
+                return replacement  # Preserves original datatype
 
         # Otherwise, perform iterative replacement and always return a string.
         previous = None
         while previous != template_string:
             previous = template_string
-            tokens = pattern.findall(template_string)
-            for token in tokens:
+            for token in pattern.findall(template_string):
                 replacement = None
                 if token.startswith("var."):
                     keys = token[4:].split(".")
-                    replacement = cls._get_value_by_path(
-                        context.get("variables", {}), keys
-                    )
-                    if replacement is None:
-                        if raise_on_missing_token:
-                            raise KeyError(
-                                f"Variable reference '{token}' not found in configuration['variables']."
-                            )
-                        else:
-                            logger.warning(
-                                f"Variable reference '{token}' not found in configuration['variables']."
-                            )
+                    replacement = cls._get_value_by_path(context.get("variables", {}), keys)
                 else:
                     parts = token.split(".")
                     replacement = cls._get_value_by_path(context, parts)
-                    if replacement is None:
-                        if raise_on_missing_token:
-                            raise KeyError(
-                                f"Variable reference '{token}' not found in configuration['variables']."
-                            )
-                        else:
-                            logger.warning(
-                                f"Variable reference '{token}' not found in configuration['variables']."
-                            )
-                if replacement is not None:
-                    template_string = template_string.replace(
-                        "${" + token + "}", str(replacement)
-                    )
+                if replacement is None:
+                    missing_tokens.add(token)
+                else:
+                    template_string = template_string.replace("${" + token + "}", str(replacement))
+        if missing_tokens:
+            message = "Missing variable reference(s): " + ", ".join(sorted(missing_tokens))
+            if raise_on_missing_token:
+                raise KeyError(message)
+            else:
+                logger.warning(message)
         return template_string
+    
 
     @classmethod
     def _resolve_bundle(
