@@ -27,27 +27,6 @@ class RunContextEnum(str, Enum):
     job = "job"
 
 
-# def get_spark(serverless: bool = False, profile: str = "DEFAULT"):
-#     """
-#     Returns a SparkSession or DatabricksSession object based on the environment.
-
-#     Parameters:
-#         serverless (bool, optional): Flag indicating whether to use serverless mode. Defaults to False.
-#         profile (str, optional): The profile to use for the session. Defaults to "DEFAULT".
-
-#     Returns:
-#         SparkSession or DatabricksSession: The Spark session object based on the environment.
-#     """
-#     if "DATABRICKS_RUNTIME_VERSION" in os.environ:
-#         return SparkSession.builder.getOrCreate()
-
-#     from databricks.connect import DatabricksSession
-
-#     if serverless:
-#         return DatabricksSession.builder.serverless().profile(profile).getOrCreate()
-#     return DatabricksSession.builder.profile(profile).getOrCreate()
-
-
 def get_databricks_run_context(spark) -> RunContextEnum:
     """
     Returns the run context based on the environment.
@@ -107,6 +86,41 @@ def find_databricks_yml(start_path: Path = None) -> Path:
 
 
 class BetterBundleConfig:
+    """A class for managing and processing Databricks bundle configurations with enhanced functionality.
+    The BetterBundleConfig class provides a robust way to handle Databricks bundle configurations,
+    offering features such as deep merging of configurations, variable resolution, target-specific
+    configurations, and integration with both local and Databricks workspace environments.
+    Key Features:
+        - Load and merge multiple YAML configuration files
+        - Process and apply target-specific configurations
+        - Resolve variable references in configuration values
+        - Integrate with Databricks workspace context
+        - Handle Git information in both local and workspace environments
+        - Support for configuration validation using Databricks CLI
+    Attributes:
+        spark: The SparkSession object used for configuration context
+        __dict__: Dynamic dictionary storing all configuration attributes
+        >>> # Building config from bundle CLI
+        >>> config = BetterBundleConfig.build_with_bundle_cli(spark, target="dev")
+        >>> # Building config from YAML file
+        >>> config = BetterBundleConfig.build_with_bundle_yml(
+        ...     spark,
+        ...     target="prod",
+        ...     bundle_path="path/to/databricks.yml"
+        ... )
+        >>> # Accessing configuration values
+        >>> value = config.get("some_key", default="default_value")
+        >>> widget_value = config.get_with_widgets("widget_key", default="default_value")
+    Notes:
+        - The class supports both local development and Databricks workspace environments
+        - Configuration values can include variable references using ${var.name} syntax
+        - Target-specific configurations can override base configurations
+        - Git information is automatically included when available
+        - Current user information is automatically included in workspace environments
+    See Also:
+        - Databricks CLI documentation for bundle configuration
+        - YAML specification for configuration file format
+    """
     def __init__(self, spark, **kwargs):
         self.spark = spark
         self.__dict__ = kwargs
@@ -666,6 +680,27 @@ class BetterBundleConfig:
 
     @classmethod
     def build_with_bundle_cli(cls, spark, target=None) -> BetterBundleConfig:
+        """
+        Builds a BetterBundleConfig instance using the Databricks bundle CLI.
+
+        This method runs the 'databricks bundle validate' command to get bundle configuration
+        and processes it into a BetterBundleConfig object.
+
+        Args:
+            spark: The active Spark session
+            target (str, optional): The bundle target to validate. If not provided, uses default target.
+
+        Returns:
+            BetterBundleConfig: A configured instance based on bundle CLI output.
+            None: If not running in local context.
+
+        Raises:
+            subprocess.CalledProcessError: If the databricks bundle validate command fails
+            json.JSONDecodeError: If the command output cannot be parsed as JSON
+            
+        Example:
+            >>> config = BetterBundleConfig.build_with_bundle_cli(spark, target="development")
+        """
         # Builds the config using the databricks bundle CLI.
         run_context = get_databricks_run_context(spark)
 
@@ -720,6 +755,38 @@ class BetterBundleConfig:
         validate: bool = True,
         raise_on_missing_token: bool = False,
     ) -> BetterBundleConfig:
+        """Builds a BetterBundleConfig instance using a Databricks bundle YAML configuration file.
+
+        This method loads and processes a databricks.yml bundle configuration file, optionally validates it
+        using the Databricks CLI, and constructs a BetterBundleConfig object with the processed configuration.
+
+        Args:
+            spark: A SparkSession object used for configuration context.
+            target: Optional[str], the target environment to use from the bundle configuration.
+                If None, will attempt to use the default target.
+            bundle_path: Optional[str], path to the databricks.yml file.
+                If None, will search for the file in the current directory structure.
+            validate: bool, whether to validate the bundle using the Databricks CLI.
+                Defaults to True. Note that validation is skipped in non-local environments.
+            raise_on_missing_token: bool, whether to raise an exception when encountering missing
+                variable tokens during resolution. Defaults to False.
+
+        Returns:
+            BetterBundleConfig: A configured instance containing the processed bundle configuration.
+
+        Raises:
+            FileNotFoundError: If the databricks.yml file cannot be found.
+            yaml.YAMLError: If there are issues parsing the YAML configuration.
+
+        Note:
+            The method performs several processing steps including:
+            - Bundle validation (if enabled)
+            - Target resolution and application
+            - Current user information updates
+            - Git information updates
+            - Variable resolution
+            - Nested reference resolution
+        """
         # Builds the config using the databricks bundle CLI.
         run_context = get_databricks_run_context(spark)
 

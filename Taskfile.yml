@@ -72,14 +72,7 @@ tasks:
     deps: [install-terminaltexteffects]
     cmds:
       - echo "Installing Python Development Tools and Dependencies" | tte wipe
-      # - pip install --upgrade pip
-      # - pip install -e .[dev]
-      # - pip uninstall -y pyspark
-      # - echo "Installing Hatch" | tte wipe
-      # - pipx install hatch
-
       - uv sync --all-extras
-      - uv pip uninstall pyspark
       - uv venv --seed --allow-existing
     silent: true
 

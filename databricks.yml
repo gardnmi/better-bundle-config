@@ -1,11 +1,11 @@
 # This is a Databricks asset bundle definition for dbbundle_config.
 # See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
 bundle:
-  name: dbbundle_config
+  name: better_bundle_config
   uuid: 9d208a75-eddc-4342-b883-40f3cdbaccf8
 
 include:
-  - src/dbbundle_config/*.yml
+  - src/better_bundle_config/*.yml
 
 targets:
   dev:

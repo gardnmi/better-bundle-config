@@ -8,6 +8,32 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "better-bundle-config"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "databricks-sdk" },
+    { name = "loguru" },
+    { name = "pyyaml" },
+    { name = "ruff" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "databricks-connect" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "databricks-connect", marker = "extra == 'dev'", specifier = "==15.4.*" },
+    { name = "databricks-sdk", specifier = ">=0.44.1" },
+    { name = "loguru", specifier = ">=0.7.3" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "ruff", specifier = ">=0.11.2" },
+]
+provides-extras = ["dev"]
+
+[[package]]
 name = "cachetools"
 version = "5.5.2"
 source = { registry = "https://pypi.org/simple" }
@@ -128,32 +154,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/60/c1/cad267dba35c6e78c
 wheels = [
     { url = "https://files.pythonhosted.org/packages/19/5b/715a828e98caafea1e53776adaac7661ce459661157293800aa617428954/databricks_sdk-0.44.1-py3-none-any.whl", hash = "sha256:2808fc73ec9934551eb8587bf82da3a42aa0f11ebc2e97468e8ced8e5b27e34d", size = 648718 },
 ]
-
-[[package]]
-name = "dbbundle-config"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "databricks-sdk" },
-    { name = "loguru" },
-    { name = "pyyaml" },
-    { name = "ruff" },
-]
-
-[package.optional-dependencies]
-dev = [
-    { name = "databricks-connect" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "databricks-connect", marker = "extra == 'dev'", specifier = "==15.4.*" },
-    { name = "databricks-sdk", specifier = ">=0.44.1" },
-    { name = "loguru", specifier = ">=0.7.3" },
-    { name = "pyyaml", specifier = ">=6.0.2" },
-    { name = "ruff", specifier = ">=0.11.2" },
-]
-provides-extras = ["dev"]
 
 [[package]]
 name = "google-auth"

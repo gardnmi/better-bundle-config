@@ -1,5 +1,5 @@
 [project]
-name = "dbbundle-config"
+name = "better-bundle-config"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -22,7 +22,7 @@ dev = [
 ]
 
 [project.scripts]
-dbbundle-config = "dbbundle_config:main"
+dbbundle-config = "better_bundle_config:main"
 
 [build-system]
 requires = ["hatchling"]
