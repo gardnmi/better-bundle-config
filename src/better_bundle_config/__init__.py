@@ -404,7 +404,7 @@ class BetterBundleConfig:
 
     @classmethod
     def _resolve_string(
-        cls, template_string: str, context: dict, raise_on_missing_token: bool = False
+        cls, template_string: str, context: dict, raise_on_missing_token: bool = False, log_warnings: bool = True
     ) -> str:
         """Resolves variable references in a template string using a given context.
 
@@ -445,7 +445,7 @@ class BetterBundleConfig:
         pattern = re.compile(r"\$\{([^}]+)\}")
         missing_tokens = set()
         
-        # Check for the simple case: the entire string is exactly a single token.
+        # Check simple case: entire string is a single token.
         tokens = pattern.findall(template_string)
         if len(tokens) == 1 and template_string.strip() == "${" + tokens[0] + "}":
             token = tokens[0]
@@ -460,7 +460,7 @@ class BetterBundleConfig:
             else:
                 return replacement  # Preserves original datatype
 
-        # Otherwise, perform iterative replacement and always return a string.
+        # Iterative replacement.
         previous = None
         while previous != template_string:
             previous = template_string
@@ -476,18 +476,17 @@ class BetterBundleConfig:
                     missing_tokens.add(token)
                 else:
                     template_string = template_string.replace("${" + token + "}", str(replacement))
-        if missing_tokens:
+        if missing_tokens and log_warnings:
             message = "Missing variable reference(s): " + ", ".join(sorted(missing_tokens))
             if raise_on_missing_token:
                 raise KeyError(message)
             else:
                 logger.warning(message)
         return template_string
-    
 
     @classmethod
     def _resolve_bundle(
-        cls, bundle: Any, context: dict, raise_on_missing_token: bool = False
+        cls, bundle: Any, context: dict, raise_on_missing_token: bool = False, log_warnings: bool = True
     ) -> Any:
         """Recursively resolves values in a bundle by replacing template strings with context values.
 
@@ -512,16 +511,16 @@ class BetterBundleConfig:
         """
         if isinstance(bundle, dict):
             return {
-                k: cls._resolve_bundle(v, context, raise_on_missing_token)
+                k: cls._resolve_bundle(v, context, raise_on_missing_token, log_warnings)
                 for k, v in bundle.items()
             }
         elif isinstance(bundle, list):
             return [
-                cls._resolve_bundle(item, context, raise_on_missing_token)
+                cls._resolve_bundle(item, context, raise_on_missing_token, log_warnings)
                 for item in bundle
             ]
         elif isinstance(bundle, str):
-            return cls._resolve_string(bundle, context, raise_on_missing_token)
+            return cls._resolve_string(bundle, context, raise_on_missing_token, log_warnings)
         else:
             return bundle
 
@@ -826,13 +825,22 @@ class BetterBundleConfig:
                 bundle=bundle,
                 context=bundle,
                 raise_on_missing_token=raise_on_missing_token,
+                log_warnings=True,  # initial pass logs warnings if needed
             )
 
             # Additional passes to resolve nested or self-references completely
             previous = None
             while previous != bundle:
                 previous = bundle
-                bundle = cls._resolve_bundle(bundle, context=bundle)
+                bundle = cls._resolve_bundle(bundle, context=bundle, log_warnings=False)
+
+            # Final pass to log or raise a warning if there are still missing tokens
+            bundle = cls._resolve_bundle(
+                bundle,
+                context=bundle,
+                raise_on_missing_token=raise_on_missing_token,
+                log_warnings=True,
+            )                
 
         except FileNotFoundError as e:
             logger.exception(f"databricks.yml file not found: {e}")
