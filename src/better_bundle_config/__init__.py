@@ -895,11 +895,13 @@ class BetterBundleConfig:
 
 
 if __name__ == "__main__":
+    pass
     # pass
-    from databricks.connect import DatabricksSession
+    # from databricks.connect import DatabricksSession
 
-    spark = DatabricksSession.builder.serverless().profile("DEFAULT").getOrCreate()
+    # spark = DatabricksSession.builder.serverless().profile("DEFAULT").getOrCreate()
 
-    print(BetterBundleConfig.build_with_bundle_yml(spark, validate=False))
-    # print(BetterBundleConfig.build_with_bundle_cli(spark))
-    # print(BetterBundleConfig.build_with_bundle_cli(spark))
+    # print(BetterBundleConfig.build_with_bundle_yml(spark, validate=False))
+    # # print(BetterBundleConfig.build_with_bundle_cli(spark))
+    # # print(BetterBundleConfig.build_with_bundle_cli(spark))
+    # DatabricksSession

@@ -1,4 +1,6 @@
-# BetterBundleConfig
+<p align="center">
+  <img src="assets/logo.png" alt="Logo" width="300">
+</p>
 
 **BetterBundleConfig** is a Python class designed to simplify how you manage and pass parameters in Databricks Bundle deployments. In standard deployments, you typically need to define parameters in two places:
 
@@ -17,22 +19,21 @@ This dual-definition pattern leads to:
 
 ## Table of Contents
 
-- [BetterBundleConfig](#betterbundleconfig)
-  - [Table of Contents](#table-of-contents)
-  - [Key Features](#key-features)
-  - [How It Works](#how-it-works)
-  - [Example YAML Configuration](#example-yaml-configuration)
-    - [`databricks.yml`](#databricksyml)
-    - [`variable.yml`](#variableyml)
-  - [Primary Usage Example](#primary-usage-example)
-  - [Local Usage with Databricks CLI](#local-usage-with-databricks-cli)
-  - [Complex Object Handling](#complex-object-handling)
-  - [Parameter Retrieval with Widgets](#parameter-retrieval-with-widgets)
-  - [Additional Examples](#additional-examples)
-    - [1. Overriding Variables at Runtime](#1-overriding-variables-at-runtime)
-    - [2. Accessing Git and User Data](#2-accessing-git-and-user-data)
-    - [3. Printing the Entire Merged Config](#3-printing-the-entire-merged-config)
-  - [Summary](#summary)
+- [Table of Contents](#table-of-contents)
+- [Key Features](#key-features)
+- [How It Works](#how-it-works)
+- [Example YAML Configuration](#example-yaml-configuration)
+  - [`databricks.yml`](#databricksyml)
+  - [`variable.yml`](#variableyml)
+- [Primary Usage Example](#primary-usage-example)
+- [Local Usage with Databricks CLI](#local-usage-with-databricks-cli)
+- [Complex Object Handling](#complex-object-handling)
+- [Parameter Retrieval with Widgets](#parameter-retrieval-with-widgets)
+- [Additional Examples](#additional-examples)
+  - [1. Overriding Variables at Runtime](#1-overriding-variables-at-runtime)
+  - [2. Accessing Git and User Data](#2-accessing-git-and-user-data)
+  - [3. Printing the Entire Merged Config](#3-printing-the-entire-merged-config)
+- [Summary](#summary)
 
 ---
 
@@ -198,9 +199,9 @@ This is the **recommended** approach, suitable for both local development and Da
 
 ```python
 from mybundle import BetterBundleConfig
-from pyspark.sql import SparkSession
+from databricks.connect import DatabricksSession
 
-spark = SparkSession.builder.getOrCreate()
+spark = DatabricksSession.builder.getOrCreate()
 
 # 1. Build configuration from YAML files (e.g., "databricks.yml" + included files).
 config = BetterBundleConfig.build_with_bundle_yml(
@@ -243,9 +244,9 @@ If you **only** want to rely on the `databricks bundle validate --output json` c
 
 ```python
 from mybundle import BetterBundleConfig
-from pyspark.sql import SparkSession
+from databricks.connect import DatabricksSession
 
-spark = SparkSession.builder.getOrCreate()
+spark = DatabricksSession.builder.getOrCreate()
 
 # This will internally call "databricks bundle validate --output json --target dev"
 config = BetterBundleConfig.build_with_bundle_cli(spark, target="dev")
