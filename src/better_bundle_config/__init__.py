@@ -838,10 +838,10 @@ class BetterBundleConfig:
             if missing:
                 message = "Missing variable reference(s): " + ", ".join(sorted(missing))
                 
-            if raise_on_missing_token:
-                raise ValueError(message)
-            else:
-                logger.warning(message)
+                if raise_on_missing_token:
+                    raise ValueError(message)
+                else:
+                    logger.warning(message)
 
         except FileNotFoundError as e:
             logger.exception(f"databricks.yml file not found: {e}")
