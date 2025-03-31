@@ -121,6 +121,7 @@ class BetterBundleConfig:
         - Databricks CLI documentation for bundle configuration
         - YAML specification for configuration file format
     """
+
     def __init__(self, spark, **kwargs):
         self.spark = spark
         self.__dict__ = kwargs
@@ -322,6 +323,9 @@ class BetterBundleConfig:
 
         if "bundle" in updated_bundle:
             updated_bundle["bundle"]["target"] = target
+            # legacy support for environment
+            # https://docs.databricks.com/aws/en/dev-tools/bundles/variables
+            updated_bundle["bundle"]["environment"] = target
         return updated_bundle
 
     @staticmethod
@@ -403,9 +407,7 @@ class BetterBundleConfig:
         return current
 
     @classmethod
-    def _resolve_string(
-        cls, template_string: str, context: dict
-    ) -> str:
+    def _resolve_string(cls, template_string: str, context: dict) -> str:
         """Resolves variable references in a template string using a given context.
 
         This method handles two types of string interpolation:
@@ -455,7 +457,7 @@ class BetterBundleConfig:
                 replacement = cls._get_value_by_path(context, parts)
             if replacement is not None:
                 return replacement  # Preserves original datatype
-        
+
         # Iterative replacement.
         previous = None
         while previous != template_string:
@@ -464,19 +466,21 @@ class BetterBundleConfig:
                 replacement = None
                 if token.startswith("var."):
                     keys = token[4:].split(".")
-                    replacement = cls._get_value_by_path(context.get("variables", {}), keys)
+                    replacement = cls._get_value_by_path(
+                        context.get("variables", {}), keys
+                    )
                 else:
                     parts = token.split(".")
                     replacement = cls._get_value_by_path(context, parts)
                 if replacement is not None:
-                    template_string = template_string.replace("${" + token + "}", str(replacement))
+                    template_string = template_string.replace(
+                        "${" + token + "}", str(replacement)
+                    )
         # No warnings or raising here.
         return template_string
 
     @classmethod
-    def _resolve_bundle(
-        cls, bundle: Any, context: dict
-    ) -> Any:
+    def _resolve_bundle(cls, bundle: Any, context: dict) -> Any:
         """Recursively resolves values in a bundle by replacing template strings with context values.
 
         This function traverses through nested dictionaries and lists, resolving any template strings
@@ -523,7 +527,6 @@ class BetterBundleConfig:
         elif isinstance(bundle, str):
             tokens.update(set(re.findall(r"\$\{([^}]+)\}", bundle)))
         return tokens
-
 
     @staticmethod
     def _update_bundle_with_current_user(bundle: dict) -> dict:
@@ -667,7 +670,7 @@ class BetterBundleConfig:
         Raises:
             subprocess.CalledProcessError: If the databricks bundle validate command fails
             json.JSONDecodeError: If the command output cannot be parsed as JSON
-            
+
         Example:
             >>> config = BetterBundleConfig.build_with_bundle_cli(spark, target="development")
         """
@@ -837,7 +840,7 @@ class BetterBundleConfig:
             missing = cls._collect_missing_tokens(bundle)
             if missing:
                 message = "Missing variable reference(s): " + ", ".join(sorted(missing))
-                
+
                 if raise_on_missing_token:
                     raise ValueError(message)
                 else:
