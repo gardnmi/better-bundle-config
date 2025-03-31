@@ -839,7 +839,7 @@ class BetterBundleConfig:
             # Final pass to collect missing tokens and log a single warning.
             missing = cls._collect_missing_tokens(bundle)
             if missing:
-                message = "Missing variable reference(s): " + ", ".join(sorted(missing))
+                message = "Missing substitution(s): " + ", ".join(sorted(missing))
 
                 if raise_on_missing_token:
                     raise ValueError(message)
