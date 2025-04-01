@@ -20,6 +20,7 @@ This dual-definition pattern leads to:
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
+- [Installation](#installation)
 - [Key Features](#key-features)
 - [How It Works](#how-it-works)
 - [Example YAML Configuration](#example-yaml-configuration)
@@ -36,6 +37,14 @@ This dual-definition pattern leads to:
 - [Summary](#summary)
 
 ---
+
+## Installation
+
+You can install **BetterBundleConfig** directly from PyPI using pip:
+
+```bash
+pip install better-bundle-config
+```
 
 ## Key Features
 
