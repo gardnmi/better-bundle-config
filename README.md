@@ -49,19 +49,16 @@ pip install better-bundle-config
 ## Key Features
 
 - **Single Source of Truth**  
-  All parameters reside in your YAML files. No more duplicating them in `dbutils.widgets`.
+  All parameters reside in your YAML files. No more duplicating them across bundle and job configurations.
 
 - **Consistent Type Handling**  
-  Variables are automatically cast to their defined types or default values.
+  Variables are automatically cast to according to how their are defined in the yml.
 
 - **Widget Integration**  
-  Seamlessly retrieve parameters from widgets when running inside a Databricks Job, or fall back to YAML defaults in other environments.
+  Seamlessly retrieve parameters from widgets when running inside a Databricks Job, or fall back to YAML defaults defined in your bundle.
 
 - **Complex Object Support**  
   Nested dictionaries and lists (e.g., a full task configuration) can be safely defined in the YAML and resolved at runtime.
-
-- **Git & User Context**  
-  Optionally captures Git metadata (branch, commit, origin URL) and current Databricks user info, making these available in your configuration at runtime.
 
 ---
 
