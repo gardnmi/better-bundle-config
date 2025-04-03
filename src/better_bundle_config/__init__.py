@@ -856,18 +856,19 @@ class BetterBundleConfig:
         return cls.build(spark, bundle)
 
     def get_with_widgets(self, name: str, default: any = None) -> any:
-        # Try retrieving the value via dbutils widgets first.
         try:
             dbutils = get_dbutils(self.spark)
             value = dbutils.widgets.get(name)
-
-            if value.lower() in ["true", "false"]:
-                return value.lower() == "true"
-            else:
-                return json.loads(value)
         except Exception:
-            logger.warning(f"Widget '{name}' not found. Falling back to config.")
+            logger.warning(f"Widget '{name}' not found. Using config fallback.")
             return self.get(name, default)
+    
+        if value.lower() in ["true", "false"]:
+            return value.lower() == "true"
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            return value
 
     def get(self, name: str, default: Any = None) -> Any:
         try:
